@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import pytest
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse

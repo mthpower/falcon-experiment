@@ -1,112 +1,136 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import json
 
 from falcon import (
     API,
     HTTP_CREATED,
+    HTTPBadRequest,
     HTTPNotAcceptable,
     HTTPNotFound,
     HTTPUnsupportedMediaType,
+    Request,
+    Response,
 )
-from marshmallow import Schema, fields
 
-
-class Storage(object):
-    _db = {}
-
-    def get(self, key):
-        return self._db[key]
-
-    def set(self, key, value):
-        self._db[key] = value
-
-    def delete(self, key):
-        del self._db[key]
-
-    def clear(self):
-        self._db = {}
-
-    def all(self):
-        return self._db
-
-
-class UserSchema(Schema):
-    name = fields.Str()
-    email = fields.Email()
-    created_at = fields.DateTime()
+from falcon_experiment.models import User, UserSchema
 
 
 class UserCollection(object):
 
-    def on_get(self, request, response):
-        response.data = json.dumps(db.all())
+    # def on_get(self, request, response):
+    #     response.document = db.all()
 
     def on_post(self, request, response):
-        response.body = 'Collection Endpoint'
+        schema = UserSchema()
+        result = schema.load(request.document)
+        user = result.data
+        user.save()
+        response.document = schema.dump(user).data
         response.status = HTTP_CREATED
 
 
 class UserDetail(object):
 
-    def on_get(self, request, response, username):
+    def on_get(self, request, response, key):
+        schema = UserSchema()
         try:
-            response.data = json.dumps(db.get(username))
+            user = User.get(key)
         except KeyError:
-            raise HTTPNotFound()
+            raise HTTPNotFound
+        else:
+            response.document = schema.dump(user).data
 
-    def on_post(self, request, response, username):
-        response.body = 'Detail Endpoint'
-        response.status = HTTP_CREATED
+    # def on_post(self, request, response, username):
+    #     response.body = 'Detail Endpoint'
+    #     response.status = HTTP_CREATED
 
 
 class RequireJSON(object):
 
-    def process_request(self, req, resp):
-        if not req.client_accepts_json:
+    def process_request(self, request, response):
+        if not request.client_accepts_json:
             raise HTTPNotAcceptable(
                 'This API only supports responses encoded as JSON.',
             )
 
-        if req.method in ('POST', 'PUT', 'PATCH'):
-            if 'application/json' not in req.content_type:
+        if request.method in ('POST', 'PUT', 'PATCH'):
+            if 'application/json' not in request.content_type:
                 raise HTTPUnsupportedMediaType(
                     'This API only supports requests encoded as JSON.',
                 )
 
 
-db = Storage()
-db.set(
-    'Alice', {
-        'name': 'Alice',
-        'email': 'alice@example.com',
-        'created_at': 'time'
-    }
-)
-db.set(
-    'Bob', {
-        'name': 'Bob',
-        'email': 'bob@example.com',
-        'created_at': 'time'
-    }
-)
+class JSONRequest(Request):
+
+    __slots__ = ('_document',)
+
+    @property
+    def document(self):
+        # Short circuit if we've already deserialised
+        try:
+            return self._document
+        except AttributeError:
+            pass
+
+        # Client did not set content length header, so short circuit
+        if not self.content_length:
+            return
+
+        body = self.stream.read()
+        if not body:
+            raise HTTPBadRequest(
+                'Empty request body',
+                'A valid JSON document is required.'
+            )
+
+        try:
+            self._document = json.loads(body.decode('utf-8'))
+        except (ValueError, UnicodeDecodeError):
+            raise HTTPBadRequest(
+                'Malformed JSON',
+                'Could not decode the request body. The '
+                'JSON was incorrect or not encoded as '
+                'UTF-8.'
+            )
+        else:
+            return self._document
+
+
+class JSONResponse(Response):
+
+    __slots__ = ('_document',)
+
+    @property
+    def document(self):
+        return self._document
+
+    @document.setter
+    def document(self, value):
+        self._document = value
+        self.data = json.dumps(self._document).encode('utf-8')
+
+    @document.deleter
+    def document(self):
+        del self._document
+
 
 api = application = API(
     middleware=[
         RequireJSON(),
-    ]
+    ],
+    request_type=JSONRequest,
+    response_type=JSONResponse,
 )
 api.add_route('/users', UserCollection())
-api.add_route('/users/{username}', UserDetail())
+api.add_route('/users/{key}', UserDetail())
 
 if __name__ == '__main__':
     # For debugging and development
     from werkzeug.serving import run_simple
     run_simple(
         hostname='localhost',
-        port=8080,
+        port=8000,
         application=application,
         use_reloader=True,
     )
