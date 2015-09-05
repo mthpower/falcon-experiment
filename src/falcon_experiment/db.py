@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 from riak import RiakClient
 
-dbclient = RiakClient(protocol='pbc', host='127.0.0.1', http_port=8087)
+db_client = RiakClient(protocol='pbc', host='127.0.0.1', http_port=8087)
 
 
 def get(bucket_name, key):
-    bucket = dbclient.bucket(bucket_name)
+    bucket = db_client.bucket(bucket_name)
     riakobject = bucket.get(key)
     if not riakobject.exists:
         raise KeyError('Object does not exist')
@@ -15,14 +15,23 @@ def get(bucket_name, key):
 
 
 def create(bucket_name, dict_):
-    bucket = dbclient.bucket(bucket_name)
+    bucket = db_client.bucket(bucket_name)
     riakobject = bucket.new(data=dict_)
     riakobject.store()
     return riakobject.key
 
 
+def delete(bucket_name, key):
+    bucket = db_client.bucket(bucket_name)
+    riakobject = bucket.get(key)
+    if not riakobject.exists:
+        raise KeyError('Object does not exist')
+
+    riakobject.delete()
+
+
 def delete_all():
-    for bucket in dbclient.get_buckets():
+    for bucket in db_client.get_buckets():
         for key in bucket.get_keys():
             robj = bucket.get(key)
             robj.delete()

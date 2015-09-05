@@ -4,46 +4,14 @@ import json
 
 from falcon import (
     API,
-    HTTP_CREATED,
     HTTPBadRequest,
     HTTPNotAcceptable,
-    HTTPNotFound,
     HTTPUnsupportedMediaType,
     Request,
     Response,
 )
 
-from falcon_experiment.models import User, UserSchema
-
-
-class UserCollection(object):
-
-    # def on_get(self, request, response):
-    #     response.document = db.all()
-
-    def on_post(self, request, response):
-        schema = UserSchema()
-        result = schema.load(request.document)
-        user = result.data
-        user.save()
-        response.document = schema.dump(user).data
-        response.status = HTTP_CREATED
-
-
-class UserDetail(object):
-
-    def on_get(self, request, response, key):
-        schema = UserSchema()
-        try:
-            user = User.get(key)
-        except KeyError:
-            raise HTTPNotFound
-        else:
-            response.document = schema.dump(user).data
-
-    # def on_post(self, request, response, username):
-    #     response.body = 'Detail Endpoint'
-    #     response.status = HTTP_CREATED
+from falcon_experiment.resources import UserCollection, UserDetail
 
 
 class RequireJSON(object):

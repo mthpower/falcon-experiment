@@ -4,14 +4,14 @@ from datetime import datetime
 
 from marshmallow import Schema, fields
 
-from falcon_experiment.db import create, get
+from falcon_experiment.db import create, delete, get
 
 
 class Model(object):
 
     def __init__(self, **kwargs):
-        self.object_key = kwargs.pop('object_key')
-        self.created_at = kwargs.pop('created_at', datetime.now())
+        self.object_key = kwargs.get('object_key')
+        self.created_at = kwargs.get('created_at', datetime.now())
 
     @classmethod
     def get(cls, key):
@@ -22,6 +22,10 @@ class Model(object):
         user = schema.load(data).data
         return user
 
+    @classmethod
+    def delete(cls, key):
+        delete(cls.bucket_name, key)
+
     def save(self):
         schema = self.schema()
         result = schema.dump(self)
@@ -30,21 +34,20 @@ class Model(object):
 
 
 class BaseSchema(Schema):
-    object_key = fields.Str()
+    object_key = fields.Str(dump_only=True)
+    created_at = fields.DateTime(dump_only=True)
 
 
 class GroupSchema(BaseSchema):
-    name = fields.Str()
-    created_at = fields.DateTime()
+    name = fields.Str(required=True)
 
     def make_object(self, data):
         return Group(**data)
 
 
 class UserSchema(BaseSchema):
-    name = fields.Str()
-    email = fields.Email()
-    created_at = fields.DateTime()
+    name = fields.Str(required=True)
+    email = fields.Email(required=True)
 
     def make_object(self, data):
         return User(**data)
@@ -57,8 +60,7 @@ class Group(Model):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.name = kwargs.pop('name')
-        self.created_at = kwargs.pop('created_at', datetime.now())
+        self.name = kwargs.get('name')
 
     def __repr__(self):
         return '<User(name={self.name!r})>'.format(self=self)
@@ -71,8 +73,8 @@ class User(Model):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.name = kwargs.pop('name')
-        self.email = kwargs.pop('email')
+        self.name = kwargs.get('name')
+        self.email = kwargs.get('email')
 
     def __repr__(self):
         return '<User(name={self.name!r})>'.format(self=self)
