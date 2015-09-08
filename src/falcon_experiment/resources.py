@@ -7,8 +7,57 @@ from falcon import (
     HTTPBadRequest,
     HTTPNotFound,
 )
+from marshmallow import ValidationError
 
-from falcon_experiment.models import User, UserSchema
+from falcon_experiment.models import (
+    Group,
+    GroupSchema,
+    User,
+    UserSchema,
+)
+
+
+class GroupCollection(object):
+
+    # def on_get(self, request, response):
+    #     response.document = db.all()
+
+    def on_post(self, request, response):
+        schema = GroupSchema()
+        try:
+            result = schema.load(request.document)
+        except ValidationError as error:
+            raise HTTPBadRequest(
+                'Invalid document submitted',
+                error.messages,
+            )
+
+        group = result.data
+        group.save()
+        response.document = {
+            'uri': 'http://localhost:8000/group/{}'.format(group.object_key)
+        }
+        response.status = HTTP_CREATED
+
+
+class GroupDetail(object):
+
+    def on_get(self, request, response, key):
+        schema = GroupSchema()
+        try:
+            group = Group.get(key)
+        except KeyError:
+            raise HTTPNotFound
+        else:
+            response.document = schema.dump(group).data
+
+    def on_delete(self, request, response, key):
+        try:
+            Group.delete(key)
+        except KeyError:
+            raise HTTPNotFound
+        else:
+            response.status = HTTP_NO_CONTENT
 
 
 class UserCollection(object):
@@ -18,17 +67,18 @@ class UserCollection(object):
 
     def on_post(self, request, response):
         schema = UserSchema()
-        result = schema.load(request.document)
-        if result.errors:
+        try:
+            result = schema.load(request.document)
+        except ValidationError as error:
             raise HTTPBadRequest(
                 'Invalid document submitted',
-                result.errors,
+                error.messages,
             )
 
         user = result.data
         user.save()
         response.document = {
-            'uri': 'http://localhost:8000/users/{}'.format(user.object_key)
+            'uri': 'http://localhost:8000/user/{}'.format(user.object_key)
         }
         response.status = HTTP_CREATED
 

@@ -11,7 +11,12 @@ from falcon import (
     Response,
 )
 
-from falcon_experiment.resources import UserCollection, UserDetail
+from falcon_experiment.resources import (
+    UserCollection,
+    UserDetail,
+    GroupCollection,
+    GroupDetail,
+)
 
 
 class RequireJSON(object):
@@ -90,8 +95,10 @@ api = application = API(
     request_type=JSONRequest,
     response_type=JSONResponse,
 )
-api.add_route('/users', UserCollection())
-api.add_route('/users/{key}', UserDetail())
+api.add_route('/user', UserCollection())
+api.add_route('/user/{key}', UserDetail())
+api.add_route('/group', GroupCollection())
+api.add_route('/group/{key}', GroupDetail())
 
 if __name__ == '__main__':
     # For debugging and development

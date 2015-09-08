@@ -14,9 +14,9 @@ def get(bucket_name, key):
     return riakobject.key, riakobject.data
 
 
-def create(bucket_name, dict_):
+def create(bucket_name, dict_, key=None):
     bucket = db_client.bucket(bucket_name)
-    riakobject = bucket.new(data=dict_)
+    riakobject = bucket.new(key=key, data=dict_)
     riakobject.store()
     return riakobject.key
 

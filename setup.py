@@ -19,7 +19,7 @@ setup(
     install_requires=[
         'cython',
         'falcon',
-        'marshmallow',
+        'marshmallow==2.0.0b5',
         'python-dateutil',
         'riak',
     ],

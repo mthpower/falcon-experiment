@@ -8,13 +8,12 @@ import pytest
 
 
 @pytest.yield_fixture()
-def user(client):
+def group(client):
     payload = json.dumps({
-        'name': 'A Test',
-        'email': 'a.test@example.com'
+        'name': 'Test Group',
     })
     response = client.post(
-        '/users', data=payload, content_type='application/json'
+        '/group', data=payload, content_type='application/json'
     )
     body = json.loads(response.data.decode())
     parsed_url = urlparse(body['uri'])
@@ -22,59 +21,55 @@ def user(client):
     # TODO: teardown
 
 
-def test_post_user(client):
+def test_post_group(client):
     payload = json.dumps({
         'name': 'A Test',
-        'email': 'a.test@example.com'
     })
     response = client.post(
-        '/users', data=payload, content_type='application/json'
+        '/group', data=payload, content_type='application/json'
     )
     body = json.loads(response.data.decode())
     assert response.status == '201 Created'
     assert body['uri']
 
 
-def test_post_user_bad_request(client):
+def test_post_group_bad_request(client):
     payload = json.dumps({
-        'name': 'A Test',
         # Wrong key name!
-        'emial': 'a.test@example.com'
+        'naem': 'A Test',
     })
     response = client.post(
-        '/users', data=payload, content_type='application/json'
+        '/group', data=payload, content_type='application/json'
     )
     body = json.loads(response.data.decode())
     assert response.status == '400 Bad Request'
     assert body['title'] == 'Invalid document submitted'
     assert body['description'] == {
-        'email': ['Missing data for required field.']
+        'name': ['Missing data for required field.']
     }
 
 
-def test_get_user(client, user):
-    response = client.get(user)
+def test_get_group(client, group):
+    response = client.get(group)
     assert response.status == '200 OK'
     body = json.loads(response.data.decode())
-    assert body['name'] == 'A Test'
-    assert body['email'] == 'a.test@example.com'
+    assert body['name'] == 'Test Group'
     assert body['created_at']
-    assert body['object_key']
 
 
-def test_get_user_not_found(client):
-    response = client.get('/user/does-not-exist')
+def test_get_group_not_found(client):
+    response = client.get('/group/does-not-exist')
     assert response.status == '404 Not Found'
     assert response.data == b''
 
 
-def test_delete_user(client, user):
-    response = client.delete(user)
+def test_delete_group(client, group):
+    response = client.delete(group)
     assert response.status == '204 No Content'
     assert response.data == b''
 
 
-def test_delete_user_not_found(client):
-    response = client.delete('/user/does-not-exist')
+def test_delete_group_not_found(client):
+    response = client.delete('/group/does-not-exist')
     assert response.status == '404 Not Found'
     assert response.data == b''

@@ -9,6 +9,8 @@ from falcon_experiment.db import create, delete, get
 
 class Model(object):
 
+    primary_key = 'object_key'
+
     def __init__(self, **kwargs):
         self.object_key = kwargs.get('object_key')
         self.created_at = kwargs.get('created_at', datetime.now())
@@ -17,10 +19,8 @@ class Model(object):
     def get(cls, key):
         schema = cls.schema()
         key, data = get(cls.bucket_name, key)
-
-        data.update({'object_key': key})
-        user = schema.load(data).data
-        return user
+        model = schema.load(data).data
+        return model
 
     @classmethod
     def delete(cls, key):
@@ -30,12 +30,16 @@ class Model(object):
         schema = self.schema()
         result = schema.dump(self)
         data = result.data
-        self.object_key = create(self.bucket_name, data)
+        key = getattr(self, self.primary_key)
+        self.object_key = create(self.bucket_name, data, key)
 
 
 class BaseSchema(Schema):
     object_key = fields.Str(dump_only=True)
     created_at = fields.DateTime(dump_only=True)
+
+    class Meta(object):
+        strict = True
 
 
 class GroupSchema(BaseSchema):
@@ -70,6 +74,7 @@ class User(Model):
 
     bucket_name = 'group'
     schema = UserSchema
+    primary_key = 'email'
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
