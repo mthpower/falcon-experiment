@@ -125,6 +125,5 @@ def test_post_group_with_users(client, users):
 
     group_response = client.get(path, content_type='application/json')
     body = json.loads(group_response.data.decode())
-    import ipdb; ipdb.set_trace()
     assert group_response.status == '200 OK'
     assert body['users'] == users

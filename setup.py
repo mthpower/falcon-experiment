@@ -18,9 +18,9 @@ setup(
     install_requires=[
         'cython',
         'falcon',
-        'marshmallow==2.0.0b5',
+        'marshmallow',
         'python-dateutil',
-        'riak',
+        'sqlalchemy',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',

@@ -10,13 +10,41 @@ from falcon import (
     Request,
     Response,
 )
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 
+from falcon_experiment import models
 from falcon_experiment.resources import (
     UserCollection,
     UserDetail,
     GroupCollection,
     GroupDetail,
 )
+
+
+engine = create_engine('sqlite:///:memory:')
+session_factory = sessionmaker(bind=engine)
+# Create a session registry
+Session = scoped_session(session_factory)
+
+# Create all our Models in the DB
+models.Model.metadata.create_all(engine)
+
+
+class DBSession(object):
+
+    def process_resource(self, request, response, resource):
+        # Only create a session if we are routed to a resource
+        if resource is not None:
+            Session()
+
+    def process_response(self, request, response, resource):
+        # Check to see if we have done any work
+        if Session.dirty or Session.new:
+            Session.commit()
+
+        # Always remove and close the session
+        Session.remove()
 
 
 class RequireJSON(object):
@@ -87,14 +115,18 @@ class JSONResponse(Response):
     def document(self):
         del self._document
 
-
 api = application = API(
+    # Ordering of middleware is important
     middleware=[
         RequireJSON(),
+        DBSession(),
     ],
+    # Custom request and response objects
     request_type=JSONRequest,
     response_type=JSONResponse,
 )
+
+# Configure routes
 api.add_route('/user', UserCollection())
 api.add_route('/user/{key}', UserDetail())
 api.add_route('/group', GroupCollection())
