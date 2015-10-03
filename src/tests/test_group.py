@@ -17,8 +17,41 @@ def group(client):
     )
     body = json.loads(response.data.decode())
     parsed_url = urlparse(body['uri'])
-    yield parsed_url.path
-    # TODO: teardown
+    path = parsed_url.path
+    yield path
+
+    teardown_resp = client.delete(path, content_type='application/json')
+    if teardown_resp.status is not '204 No Content':
+        raise Exception
+
+
+@pytest.yield_fixture()
+def users(client):
+    usernames = [
+        ('A Test', 'a.test@example.com'),
+        ('B Test', 'b.test@example.com'),
+        ('C Test', 'c.test@example.com'),
+    ]
+    paths = []
+    for username, email in usernames:
+        payload = json.dumps({
+            'name': username,
+            'email': email,
+        })
+        response = client.post(
+            '/user', data=payload, content_type='application/json'
+        )
+        body = json.loads(response.data.decode())
+        parsed_url = urlparse(body['uri'])
+        path = parsed_url.path
+        paths.append(path)
+
+    yield paths
+
+    for path in paths:
+        teardown_resp = client.delete(path, content_type='application/json')
+        if not teardown_resp.status == '204 No Content':
+            raise Exception
 
 
 def test_post_group(client):
@@ -73,3 +106,25 @@ def test_delete_group_not_found(client):
     response = client.delete('/group/does-not-exist')
     assert response.status == '404 Not Found'
     assert response.data == b''
+
+
+# Testing user relations
+def test_post_group_with_users(client, users):
+    payload = json.dumps({
+        'name': 'Test Group with Users',
+        'users': users
+    })
+    response = client.post(
+        '/group', data=payload, content_type='application/json'
+    )
+    body = json.loads(response.data.decode())
+    parsed_url = urlparse(body['uri'])
+    path = parsed_url.path
+
+    assert response.status == '201 Created'
+
+    group_response = client.get(path, content_type='application/json')
+    body = json.loads(group_response.data.decode())
+    import ipdb; ipdb.set_trace()
+    assert group_response.status == '200 OK'
+    assert body['users'] == users

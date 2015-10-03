@@ -18,8 +18,12 @@ def user(client):
     )
     body = json.loads(response.data.decode())
     parsed_url = urlparse(body['uri'])
-    yield parsed_url.path
-    # TODO: teardown
+    path = parsed_url.path
+    yield path
+
+    teardown_resp = client.delete(path, content_type='application/json')
+    if not teardown_resp.status == '204 No Content':
+        raise Exception
 
 
 def test_post_user(client):

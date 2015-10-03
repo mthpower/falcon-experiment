@@ -44,8 +44,10 @@ class BaseSchema(Schema):
 
 class GroupSchema(BaseSchema):
     name = fields.Str(required=True)
+    users = fields.List(fields.Url(relative=True))
 
     def make_object(self, data):
+        import ipdb; ipdb.set_trace()
         return Group(**data)
 
 
@@ -65,6 +67,7 @@ class Group(Model):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.name = kwargs.get('name')
+        self.users = kwargs.get('users')
 
     def __repr__(self):
         return '<User(name={self.name!r})>'.format(self=self)

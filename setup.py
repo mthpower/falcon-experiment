@@ -7,14 +7,13 @@ README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
 setup(
     name='falcon-experiment',
-    packages=find_packages('src'),
+    packages=find_packages('src', exclude='tests'),
     package_dir={'': 'src'},
     description='A test app using falcon',
     long_description=README,
     author='Matthew Power',
     author_email='mth.power@gmail.com',
     license='MIT',
-    # url='https://github.com/mthpower/xlsx-to-nosql',
     zip_safe=True,
     install_requires=[
         'cython',
