@@ -10,25 +10,15 @@ from falcon import (
     Request,
     Response,
 )
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
 
 from falcon_experiment import models
+from falcon_experiment.db import Session, engine
 from falcon_experiment.resources import (
     UserCollection,
     UserDetail,
     GroupCollection,
     GroupDetail,
 )
-
-
-engine = create_engine('sqlite:///:memory:')
-session_factory = sessionmaker(bind=engine)
-# Create a session registry
-Session = scoped_session(session_factory)
-
-# Create all our Models in the DB
-models.Model.metadata.create_all(engine)
 
 
 class DBSession(object):
@@ -115,6 +105,10 @@ class JSONResponse(Response):
     def document(self):
         del self._document
 
+
+# Create all our Models in the DB
+models.Model.metadata.create_all(engine)
+
 api = application = API(
     # Ordering of middleware is important
     middleware=[
@@ -128,9 +122,9 @@ api = application = API(
 
 # Configure routes
 api.add_route('/user', UserCollection())
-api.add_route('/user/{key}', UserDetail())
+api.add_route('/user/{email}', UserDetail())
 api.add_route('/group', GroupCollection())
-api.add_route('/group/{key}', GroupDetail())
+api.add_route('/group/{id}', GroupDetail())
 
 if __name__ == '__main__':
     # For debugging and development

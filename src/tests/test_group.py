@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import json
 from urllib.parse import urlparse
 
@@ -21,7 +20,7 @@ def group(client):
     yield path
 
     teardown_resp = client.delete(path, content_type='application/json')
-    if teardown_resp.status is not '204 No Content':
+    if not teardown_resp.status == '204 No Content':
         raise Exception
 
 
@@ -87,7 +86,7 @@ def test_get_group(client, group):
     assert response.status == '200 OK'
     body = json.loads(response.data.decode())
     assert body['name'] == 'Test Group'
-    assert body['created_at']
+    assert body['created']
 
 
 def test_get_group_not_found(client):
@@ -109,21 +108,21 @@ def test_delete_group_not_found(client):
 
 
 # Testing user relations
-def test_post_group_with_users(client, users):
-    payload = json.dumps({
-        'name': 'Test Group with Users',
-        'users': users
-    })
-    response = client.post(
-        '/group', data=payload, content_type='application/json'
-    )
-    body = json.loads(response.data.decode())
-    parsed_url = urlparse(body['uri'])
-    path = parsed_url.path
+# def test_post_group_with_users(client, users):
+#     payload = json.dumps({
+#         'name': 'Test Group with Users',
+#         'users': users
+#     })
+#     response = client.post(
+#         '/group', data=payload, content_type='application/json'
+#     )
+#     body = json.loads(response.data.decode())
+#     parsed_url = urlparse(body['uri'])
+#     path = parsed_url.path
 
-    assert response.status == '201 Created'
+#     assert response.status == '201 Created'
 
-    group_response = client.get(path, content_type='application/json')
-    body = json.loads(group_response.data.decode())
-    assert group_response.status == '200 OK'
-    assert body['users'] == users
+#     group_response = client.get(path, content_type='application/json')
+#     body = json.loads(group_response.data.decode())
+#     assert group_response.status == '200 OK'
+#     assert body['users'] == users

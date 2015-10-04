@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import json
 from urllib.parse import urlparse
 
@@ -10,7 +9,7 @@ import pytest
 @pytest.yield_fixture()
 def user(client):
     payload = json.dumps({
-        'name': 'A Test',
+        'username': 'A Test',
         'email': 'a.test@example.com'
     })
     response = client.post(
@@ -28,7 +27,7 @@ def user(client):
 
 def test_post_user(client):
     payload = json.dumps({
-        'name': 'A Test',
+        'username': 'A Test',
         'email': 'a.test@example.com'
     })
     response = client.post(
@@ -41,7 +40,7 @@ def test_post_user(client):
 
 def test_post_user_bad_request(client):
     payload = json.dumps({
-        'name': 'A Test',
+        'username': 'A Test',
         # Wrong key name!
         'emial': 'a.test@example.com'
     })
@@ -60,9 +59,9 @@ def test_get_user(client, user):
     response = client.get(user)
     assert response.status == '200 OK'
     body = json.loads(response.data.decode())
-    assert body['name'] == 'A Test'
+    assert body['username'] == 'A Test'
     assert body['email'] == 'a.test@example.com'
-    assert body['created_at']
+    assert body['created']
 
 
 def test_get_user_not_found(client):

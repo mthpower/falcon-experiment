@@ -8,20 +8,6 @@ from sqlalchemy.ext.declarative import declarative_base
 Model = declarative_base()
 
 
-class User(Model):
-    __tablename__ = 'users'
-
-    id = Column(Integer, primary_key=True)
-    created = Column(DateTime, default=datetime.now())
-    name = Column(String)
-    email = Column(String)
-
-    def __repr__(self):
-        return '<User(name="{name}")>'.format(
-            name=self.name,
-        )
-
-
 class Group(Model):
     __tablename__ = 'groups'
 
@@ -32,4 +18,17 @@ class Group(Model):
     def __repr__(self):
         return '<Group(name="{name}")>'.format(
             name=self.name,
+        )
+
+
+class User(Model):
+    __tablename__ = 'users'
+
+    email = Column(String, primary_key=True)
+    created = Column(DateTime, default=datetime.now())
+    username = Column(String)
+
+    def __repr__(self):
+        return '<User(email="{email}")>'.format(
+            email=self.email,
         )

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 from falcon import (
     HTTP_CREATED,
     HTTP_NO_CONTENT,
@@ -9,10 +8,13 @@ from falcon import (
 )
 from marshmallow import ValidationError
 
+from falcon_experiment.db import Session
 from falcon_experiment.models import (
     Group,
-    GroupSchema,
     User,
+)
+from falcon_experiment.schemas import (
+    GroupSchema,
     UserSchema,
 )
 
@@ -33,31 +35,32 @@ class GroupCollection(object):
             )
 
         group = result.data
-        group.save()
+        Session.add(group)
+        # Commit early to return the id in the uri
+        Session.commit()
         response.document = {
-            'uri': 'http://localhost:8000/group/{}'.format(group.object_key)
+            'uri': 'http://localhost:8000/group/{}'.format(group.id)
         }
         response.status = HTTP_CREATED
 
 
 class GroupDetail(object):
 
-    def on_get(self, request, response, key):
+    def on_get(self, request, response, id):
         schema = GroupSchema()
-        try:
-            group = Group.get(key)
-        except KeyError:
+        group = Session.query(Group).get(id)
+        if group is None:
             raise HTTPNotFound
-        else:
-            response.document = schema.dump(group).data
 
-    def on_delete(self, request, response, key):
-        try:
-            Group.delete(key)
-        except KeyError:
+        response.document = schema.dump(group).data
+
+    def on_delete(self, request, response, id):
+        group = Session.query(Group).get(id)
+        if group is None:
             raise HTTPNotFound
-        else:
-            response.status = HTTP_NO_CONTENT
+
+        Session.delete(group)
+        response.status = HTTP_NO_CONTENT
 
 
 class UserCollection(object):
@@ -76,28 +79,29 @@ class UserCollection(object):
             )
 
         user = result.data
-        user.save()
+        Session.add(user)
+        # Commit early to return the id in the uri
+        Session.commit()
         response.document = {
-            'uri': 'http://localhost:8000/user/{}'.format(user.object_key)
+            'uri': 'http://localhost:8000/user/{}'.format(user.email)
         }
         response.status = HTTP_CREATED
 
 
 class UserDetail(object):
 
-    def on_get(self, request, response, key):
+    def on_get(self, request, response, email):
         schema = UserSchema()
-        try:
-            user = User.get(key)
-        except KeyError:
+        user = Session.query(User).get(email)
+        if user is None:
             raise HTTPNotFound
-        else:
-            response.document = schema.dump(user).data
 
-    def on_delete(self, request, response, key):
-        try:
-            User.delete(key)
-        except KeyError:
+        response.document = schema.dump(user).data
+
+    def on_delete(self, request, response, email):
+        user = Session.query(User).get(email)
+        if user is None:
             raise HTTPNotFound
-        else:
-            response.status = HTTP_NO_CONTENT
+
+        Session.delete(user)
+        response.status = HTTP_NO_CONTENT
