@@ -30,7 +30,7 @@ class DBSession(object):
 
     def process_response(self, request, response, resource):
         # Check to see if we have done any work
-        if Session.dirty or Session.new:
+        if Session.deleted or Session.dirty or Session.new:
             Session.commit()
 
         # Always remove and close the session

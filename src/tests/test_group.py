@@ -19,9 +19,8 @@ def group(client):
     path = parsed_url.path
     yield path
 
-    teardown_resp = client.delete(path, content_type='application/json')
-    if not teardown_resp.status == '204 No Content':
-        raise Exception
+    # Try to delete anyway, in case we did not in the test
+    client.delete(path, content_type='application/json')
 
 
 @pytest.yield_fixture()
@@ -99,6 +98,8 @@ def test_delete_group(client, group):
     response = client.delete(group)
     assert response.status == '204 No Content'
     assert response.data == b''
+    not_found_response = client.get(group)
+    assert not_found_response.status == '404 Not Found'
 
 
 def test_delete_group_not_found(client):
