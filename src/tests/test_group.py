@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""Tests for the group endpoints."""
+
 import json
 from urllib.parse import urlparse
 
@@ -8,6 +10,7 @@ import pytest
 
 @pytest.yield_fixture()
 def group(client):
+    """Fixture to yield a relative uri of a created group."""
     payload = json.dumps({
         'name': 'Test Group',
     })
@@ -25,6 +28,7 @@ def group(client):
 
 @pytest.yield_fixture()
 def users(client):
+    """Fixture to yield a list of relative uris to created users."""
     usernames = [
         ('A Test', 'a.test@example.com'),
         ('B Test', 'b.test@example.com'),
@@ -53,6 +57,11 @@ def users(client):
 
 
 def test_post_group(client):
+    """Test that we can create a group.
+
+    Tests that a group can be created by making a POST request to the
+    group collection endpoint.
+    """
     payload = json.dumps({
         'name': 'A Test',
     })
@@ -65,6 +74,11 @@ def test_post_group(client):
 
 
 def test_post_group_bad_request(client):
+    """Test that a bad payload returns a HTTP Bad Request.
+
+    In this case, when creating a group, we've incorrectly spelt a required key
+    of the JSON.
+    """
     payload = json.dumps({
         # Wrong key name!
         'naem': 'A Test',
@@ -81,6 +95,11 @@ def test_post_group_bad_request(client):
 
 
 def test_get_group(client, group):
+    """Test that a group can be retrieved.
+
+    Tests that a group can be retrieved by making a GET request to the URI
+    of a group.
+    """
     response = client.get(group)
     assert response.status == '200 OK'
     body = json.loads(response.data.decode())
@@ -89,12 +108,18 @@ def test_get_group(client, group):
 
 
 def test_get_group_not_found(client):
+    """Test that a group that does not exist returns a HTTP Not Found."""
     response = client.get('/group/does-not-exist')
     assert response.status == '404 Not Found'
     assert response.data == b''
 
 
 def test_delete_group(client, group):
+    """Test that a group can be deleted.
+
+    Tests that a group can be deleted by making a DELETE request to the URI
+    of the group.
+    """
     response = client.delete(group)
     assert response.status == '204 No Content'
     assert response.data == b''
@@ -103,6 +128,11 @@ def test_delete_group(client, group):
 
 
 def test_delete_group_not_found(client):
+    """Test deleting a group that does not exist.
+
+    A DELETE request for a group that does not exist should return an
+    HTTP Not Found.
+    """
     response = client.delete('/group/does-not-exist')
     assert response.status == '404 Not Found'
     assert response.data == b''

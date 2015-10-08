@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""REST resources are defined according the Falcon responder interface."""
+
 from falcon import (
     HTTP_CREATED,
     HTTP_NO_CONTENT,
@@ -21,10 +23,13 @@ from falcon_experiment.schemas import (
 
 class GroupCollection(object):
 
+    """Defines HTTP methods for acting on a collection of Groups."""
+
     # def on_get(self, request, response):
     #     response.document = db.all()
 
     def on_post(self, request, response):
+        """Create a new Group."""
         schema = GroupSchema()
         try:
             result = schema.load(request.document)
@@ -46,7 +51,10 @@ class GroupCollection(object):
 
 class GroupDetail(object):
 
+    """Defines HTTP methods for acting on an individual Group."""
+
     def on_get(self, request, response, id):
+        """Retrieve a Group."""
         schema = GroupSchema()
         group = Session.query(Group).get(id)
         if group is None:
@@ -55,6 +63,7 @@ class GroupDetail(object):
         response.document = schema.dump(group).data
 
     def on_delete(self, request, response, id):
+        """Delete a Group."""
         group = Session.query(Group).get(id)
         if group is None:
             raise HTTPNotFound
@@ -65,10 +74,13 @@ class GroupDetail(object):
 
 class UserCollection(object):
 
+    """Defines HTTP methods for acting on a collection of Users."""
+
     # def on_get(self, request, response):
     #     response.document = db.all()
 
     def on_post(self, request, response):
+        """Create a new User."""
         schema = UserSchema()
         try:
             result = schema.load(request.document)
@@ -90,7 +102,10 @@ class UserCollection(object):
 
 class UserDetail(object):
 
+    """Defines HTTP methods for acting on an individual User."""
+
     def on_get(self, request, response, email):
+        """Retrieve a User."""
         schema = UserSchema()
         user = Session.query(User).get(email)
         if user is None:
@@ -99,6 +114,7 @@ class UserDetail(object):
         response.document = schema.dump(user).data
 
     def on_delete(self, request, response, email):
+        """Delete a User."""
         user = Session.query(User).get(email)
         if user is None:
             raise HTTPNotFound
