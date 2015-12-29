@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """REST resources are defined according the Falcon responder interface."""
 

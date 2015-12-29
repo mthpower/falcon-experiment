@@ -1,8 +1,8 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Schemas for API endpoints, implemented using Marshmallow."""
 from marshmallow import Schema, fields, post_load
 
+from falcon_experiment.db import get_one_or_create
 from falcon_experiment.models import (
     Group,
     User,
@@ -25,12 +25,15 @@ class GroupSchema(BaseSchema):
 
     id = fields.Str(dump_only=True)
     name = fields.Str(required=True)
-    users = fields.List(fields.Url(relative=True))
+    users = fields.Nested(
+        'UserSchema', many=True, exclude=['created', 'username']
+    )
 
     @post_load
     def make_object(self, data):
         """After validating incoming data will output an object."""
-        return Group(**data)
+        name = data['name']
+        return get_one_or_create(Group, name=name, create_kwargs=data)
 
 
 class UserSchema(BaseSchema):
@@ -43,4 +46,5 @@ class UserSchema(BaseSchema):
     @post_load
     def make_object(self, data):
         """After validating incoming data will output an object."""
-        return User(**data)
+        email = data['email']
+        return get_one_or_create(User, email=email, create_kwargs=data)

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Global test configuration using pytest's conftest.py standard."""
 import pytest

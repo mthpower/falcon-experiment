@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Tests for the group endpoints."""
 
@@ -28,32 +27,23 @@ def group(client):
 
 @pytest.yield_fixture()
 def users(client):
-    """Fixture to yield a list of relative uris to created users."""
-    usernames = [
-        ('A Test', 'a.test@example.com'),
-        ('B Test', 'b.test@example.com'),
-        ('C Test', 'c.test@example.com'),
+    """Fixture to yield a list of emails to created users."""
+    document = [
+        {'email': 'a.test@example.com', 'username': 'A Test'},
+        {'email': 'b.test@example.com', 'username': 'B Test'},
+        {'email': 'c.test@example.com', 'username': 'C Test'},
     ]
-    paths = []
-    for username, email in usernames:
-        payload = json.dumps({
-            'name': username,
-            'email': email,
-        })
-        response = client.post(
-            '/user', data=payload, content_type='application/json'
+    for user in document:
+        client.post(
+            '/user', data=json.dumps(user), content_type='application/json'
         )
-        body = json.loads(response.data.decode())
-        parsed_url = urlparse(body['uri'])
-        path = parsed_url.path
-        paths.append(path)
 
-    yield paths
+    yield [{'email': user['email']} for user in document]
 
-    for path in paths:
-        teardown_resp = client.delete(path, content_type='application/json')
-        if not teardown_resp.status == '204 No Content':
-            raise Exception
+    for user in document:
+        client.delete(
+            '/user/{}'.format(user['email']), content_type='application/json'
+        )
 
 
 def test_post_group(client):
@@ -138,22 +128,22 @@ def test_delete_group_not_found(client):
     assert response.data == b''
 
 
-# Testing user relations
-# def test_post_group_with_users(client, users):
-#     payload = json.dumps({
-#         'name': 'Test Group with Users',
-#         'users': users
-#     })
-#     response = client.post(
-#         '/group', data=payload, content_type='application/json'
-#     )
-#     body = json.loads(response.data.decode())
-#     parsed_url = urlparse(body['uri'])
-#     path = parsed_url.path
+def test_post_group_with_users(client, users):
+    """Test user relations."""
+    payload = json.dumps({
+        'name': 'Test Group with Users',
+        'users': users
+    })
+    response = client.post(
+        '/group', data=payload, content_type='application/json'
+    )
+    assert response.status == '201 Created'
 
-#     assert response.status == '201 Created'
+    body = json.loads(response.data.decode())
+    parsed_url = urlparse(body['uri'])
+    path = parsed_url.path
 
-#     group_response = client.get(path, content_type='application/json')
-#     body = json.loads(group_response.data.decode())
-#     assert group_response.status == '200 OK'
-#     assert body['users'] == users
+    group_response = client.get(path, content_type='application/json')
+    body = json.loads(group_response.data.decode())
+    assert group_response.status == '200 OK'
+    assert body['users'] == users
