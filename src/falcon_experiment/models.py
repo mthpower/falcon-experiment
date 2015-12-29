@@ -32,7 +32,7 @@ class Group(Model):
 
     id = Column(Integer, primary_key=True)
     created = Column(DateTime, default=datetime.now())
-    name = Column(String)
+    name = Column(String, nullable=False)
     users = relationship(
         'User',
         secondary='groups_to_users',
@@ -58,7 +58,7 @@ class User(Model):
 
     email = Column(String, primary_key=True)
     created = Column(DateTime, default=datetime.now())
-    username = Column(String)
+    username = Column(String, nullable=False)
 
     def __repr__(self):
         """Return a human-readable representation of the object."""

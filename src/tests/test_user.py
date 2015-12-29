@@ -27,7 +27,8 @@ def user(client):
 
 
 def test_post_user(client):
-    """Test that we can create a user.
+    """
+    Test that we can create a user.
 
     Tests that a user can be created by making a POST request to the
     user collection endpoint.
@@ -45,7 +46,8 @@ def test_post_user(client):
 
 
 def test_post_user_bad_request(client):
-    """Test that a bad payload returns a HTTP Bad Request.
+    """
+    Test that a bad payload returns a HTTP Bad Request.
 
     In this case, when creating a user, we've incorrectly spelt a required key
     of the JSON.
@@ -67,7 +69,8 @@ def test_post_user_bad_request(client):
 
 
 def test_get_user(client, user):
-    """Test that a user can be retrieved.
+    """
+    Test that a user can be retrieved.
 
     Tests that a user can be retrieved by making a GET request to the URI
     of a user.
@@ -88,7 +91,8 @@ def test_get_user_not_found(client):
 
 
 def test_delete_user(client, user):
-    """Test that a user can be deleted.
+    """
+    Test that a user can be deleted.
 
     Tests that a user can be deleted by making a DELETE request to the URI
     of the user.
@@ -101,7 +105,8 @@ def test_delete_user(client, user):
 
 
 def test_delete_user_not_found(client):
-    """Test deleting a user that does not exist.
+    """
+    Test deleting a user that does not exist.
 
     A DELETE request for a user that does not exist should return an
     HTTP Not Found.

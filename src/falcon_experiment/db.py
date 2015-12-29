@@ -32,18 +32,17 @@ def do_begin(conn):
 
 def get_one_or_create(model, create_kwargs=None, **kwargs):
     """Race free django-style get or create."""
-    session = Session()
-    query = session.query(model).filter_by(**kwargs)
+    query = Session.query(model).filter_by(**kwargs)
     try:
         return query.one()
     except NoResultFound:
-        session.begin_nested()
+        Session.begin_nested()
         kwargs.update(create_kwargs or {})
         new = model(**kwargs)
-        session.add(new)
+        Session.add(new)
         try:
-            session.commit()
+            Session.commit()
             return new
         except IntegrityError:
-            session.rollback()
+            Session.rollback()
             return query.one()

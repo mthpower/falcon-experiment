@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Schemas for API endpoints, implemented using Marshmallow."""
-from marshmallow import Schema, fields, post_load
+from marshmallow import Schema, fields, post_load, pre_load, ValidationError
 
-from falcon_experiment.db import get_one_or_create
+from falcon_experiment.db import get_one_or_create, Session
 from falcon_experiment.models import (
     Group,
     User,
@@ -28,6 +28,18 @@ class GroupSchema(BaseSchema):
     users = fields.Nested(
         'UserSchema', many=True, exclude=['created', 'username']
     )
+
+    @pre_load(pass_many=True)
+    def validate_users(self, data, many):
+        """Validate that the submitted users all exist."""
+        users = data.get('users', [])
+        users = {user['email'] for user in users}
+        query = Session.query(User).filter(User.email.in_(users))
+        do_not_exist = users - {user.email for user in query.all()}
+        if do_not_exist:
+            raise ValidationError(
+                'Users: {} do not exist'.format(do_not_exist.__repr__())
+            )
 
     @post_load
     def make_object(self, data):
