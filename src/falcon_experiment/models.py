@@ -11,10 +11,38 @@ from sqlalchemy import (
     String,
     Table,
 )
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm.exc import NoResultFound
 
-Model = declarative_base()
+from falcon_experiment.db import Session
+
+
+class QueryMixin(object):
+
+    """Mixin for common query patterns."""
+
+    @classmethod
+    def get_one_or_create(cls, create_kwargs=None, **kwargs):
+        """Race free django-style get or create."""
+        query = Session.query(cls).filter_by(**kwargs)
+        try:
+            return query.one()
+        except NoResultFound:
+            Session.begin_nested()
+            kwargs.update(create_kwargs or {})
+            new = cls(**kwargs)
+            Session.add(new)
+            try:
+                Session.commit()
+                return new
+            except IntegrityError:
+                Session.rollback()
+                return query.one()
+
+
+Model = declarative_base(cls=QueryMixin)
 
 groups_to_users = Table(
     'groups_to_users',

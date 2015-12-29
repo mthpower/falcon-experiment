@@ -2,9 +2,7 @@
 """Configuration for SQLAlchemy."""
 
 from sqlalchemy import create_engine, event
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.orm.exc import NoResultFound
 
 
 engine = create_engine('sqlite:///:memory:')
@@ -28,21 +26,3 @@ def do_connect(dbapi_connection, connection_record):
 def do_begin(conn):
     """Emit our own BEGIN."""
     conn.execute("BEGIN")
-
-
-def get_one_or_create(model, create_kwargs=None, **kwargs):
-    """Race free django-style get or create."""
-    query = Session.query(model).filter_by(**kwargs)
-    try:
-        return query.one()
-    except NoResultFound:
-        Session.begin_nested()
-        kwargs.update(create_kwargs or {})
-        new = model(**kwargs)
-        Session.add(new)
-        try:
-            Session.commit()
-            return new
-        except IntegrityError:
-            Session.rollback()
-            return query.one()

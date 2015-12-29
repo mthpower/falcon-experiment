@@ -2,7 +2,7 @@
 """Schemas for API endpoints, implemented using Marshmallow."""
 from marshmallow import Schema, fields, post_load, pre_load, ValidationError
 
-from falcon_experiment.db import get_one_or_create, Session
+from falcon_experiment.db import Session
 from falcon_experiment.models import (
     Group,
     User,
@@ -45,7 +45,7 @@ class GroupSchema(BaseSchema):
     def make_object(self, data):
         """After validating incoming data will output an object."""
         name = data['name']
-        return get_one_or_create(Group, name=name, create_kwargs=data)
+        return Group.get_one_or_create(name=name, create_kwargs=data)
 
 
 class UserSchema(BaseSchema):
@@ -59,4 +59,4 @@ class UserSchema(BaseSchema):
     def make_object(self, data):
         """After validating incoming data will output an object."""
         email = data['email']
-        return get_one_or_create(User, email=email, create_kwargs=data)
+        return User.get_one_or_create(email=email, create_kwargs=data)
